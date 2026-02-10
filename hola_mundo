@@ -1,6 +1,11 @@
 #include <iostream>
 using namespace std;
 
+int longitudCadena(char texto[]);
+int contarCaracteresGrupo(char frases[][100], int);
+int indiceFraseMasLarga()
+
+
 int main (){
 	cout << "Hola mundo";
 }
