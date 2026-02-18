@@ -28,7 +28,6 @@ void inicializarArchivo(char nombre[], int maxEquipos) {
         for (int i = 0; i < maxEquipos; i++) {
             archivo.write(reinterpret_cast<char*>(&vacio), sizeof(equipo));
         }
-        cout << "Archivo inicializado" << endl;
     }
     archivo.close();
 }
@@ -36,7 +35,7 @@ void inicializarArchivo(char nombre[], int maxEquipos) {
 void registrarEquipo(char nombre[], int maxEquipos) {
     // Implementar la función para registrar un equipo
     int codigo;
-    cout << "Ingrese el codigo del equipo (0-" << maxEquipos - 1 << "): ";
+    cout << "Ingrese el codigo del equipo (1 - " << maxEquipos  << "): ";
     cin >> codigo;
 
     if (codigo < 0 || codigo > maxEquipos) {
@@ -51,7 +50,7 @@ void registrarEquipo(char nombre[], int maxEquipos) {
     equipo posicion_codigo;
     archivo.read(reinterpret_cast<char*>(&posicion_codigo), sizeof(equipo));
 
-    if (posicion_codigo.codigo != -1) {
+    if (posicion_codigo.codigo == -1) {
         cout << "La posicion ingresada ya esta ocupada :( ";
         return;
     }
@@ -68,7 +67,7 @@ void registrarEquipo(char nombre[], int maxEquipos) {
 
     cout << "Ingrese el tipo de equipo ('L' Portatil / 'D' Escritorio / 'S' Servidor)";
     cin >> nuevo.tipo;
-    while (nuevo.tipo != 'L' || nuevo.tipo != 'D' ||  nuevo.tipo != 'S' ) {
+    while (nuevo.tipo != 'L' && nuevo.tipo != 'D' &&  nuevo.tipo != 'S' ) {
         cout << "El valor ingresado no es válido" << endl;
         cout << "Ingrese el tipo de equipo nuevamente ('L' Portatil / 'D' Escritorio / 'S' Servidor)";
         cin >> nuevo.tipo;
@@ -148,25 +147,72 @@ void cambiarEstado(char nombre[], int maxEquipos) {
 
     fstream archivo(nombre, ios::binary | ios::in | ios::out);
 
-    archivo.seekg(id * sizeof(equipo), ios::beg);
+    archivo.seekg(codigo * sizeof(equipo), ios::beg);
 
     equipo cambio;
     archivo.read(reinterpret_cast<char*>(&cambio), sizeof(equipo));
 
     if (cambio.codigo == -1) {
         cout << "Ese ID no contiene vehiculo.\n";
+        archivo.close();
         return;
     }
 
-    v.estado = !v.estado;
+    cambio.operativo = !cambio.operativo;
 
-    file.seekp(id * sizeof(Vehiculo), ios::beg);
-    file.write(reinterpret_cast<char*>(&v), sizeof(Vehiculo));
+    archivo.seekp(codigo * sizeof(equipo), ios::beg);
+    archivo.write(reinterpret_cast<char*>(&cambio), sizeof(equipo));
 
     cout << "Estado cambiado.\n";
 
-    file.close();
+    archivo.close();
 }
+
+
+void listarEquipos(char nombre[], int maxEquipos) {
+    
+    ifstream archivo (nombre, ios::binary);
+
+    equipo equipo[maxEquipos];
+    for (int i = 0; i < maxEquipos; i++) {
+        archivo.read(reinterpret_cast<char*>(&equipo[i]), sizeof(equipo));
+    }
+
+    for (int i = 0; i < maxEquipos; i++) {
+        cout << "Equipo con codigo " << i << ": " << endl;
+        cout << equipo[i].descripcion << endl;
+        cout << equipo[i].anioFabricacion << endl;
+        switch (equipo[i].tipo) {
+            case 'L':
+                cout << "Tipo de equipo: Portatil" << endl;
+                break;
+            case 'D':
+                cout << "Tipo de equipo: Escritorio" << endl;
+                break;
+            case 'S':
+                cout << "Tipo de equipo: Servidor" << endl;
+                break;
+        }
+        cout << equipo[i].estado << endl;
+        if (equipo[i].operativo) {
+            cout << "Disponibilidad: El equipo está operativo";
+        } else {
+            cout << "Disponibilidad: El equipo no está operativo";  
+        }
+    }   
+    archivo.close();
+}
+
+void marcarFueradeUso(char nombre[], int maxEquipos) {
+    int codigo;
+    cout << "Ingrese el codigo del equipo que desea marcar como fuera de uso: ";
+    cin >> codigo;
+
+
+
+}
+    // Implementar la función para marcar un equipo como fuera de uso
+
 
 int main () {
 
@@ -174,33 +220,52 @@ int main () {
     int maxEquipos = 0;
     int menu = 0;
 
-
-    cout << "Ingrese la cantidad maxima de equipos: ";
-    cin >> maxEquipos;
+    inicializarArchivo(archivo,maxEquipos);
 
     cout << "MENU" << endl;
-    cout << "A continuación elija la opción que necesite ejecutar" << endl;
-    cout << "Oprima '1' si Registrar un equipo nuevo." << endl;
-    cout << "Oprima '2' si  Consultar un equipo por su código." << endl;
-    cout << "Oprima '3' si  Actualizar el estado del equipo. " << endl;
-    cout << "Oprima '4' si  Listar los equipos operativos." << endl;
-    cout << "Oprima '5' si Marcar un equipo como fuera de uso. " << endl;
-
+    
+    cout << "Oprima '1' si desea registrar un equipo nuevo." << endl;
+    cout << "Oprima '2' si desea consultar un equipo por su código." << endl;
+    cout << "Oprima '3' si desea actualizar el estado del equipo. " << endl;
+    cout << "Oprima '4' si desea listar los equipos operativos." << endl;
+    cout << "Oprima '5' si desea marcar un equipo como fuera de uso. " << endl;
+    cout << "A continuación elija la opción que necesite ejecutar: ";
+    cin >> menu;
+    
+    cout << "Ingrese la cantidad maxima de equipos: ";
+    cin >> maxEquipos;
+do {
     switch (menu) {
         case 1:
-            inicializarArchivo(archivo,maxEquipos);
-            registrarEquipo(archivo, maxEquipos);
+            
+            registrarEquipo(archivo, maxEquipos);   
             break;
         case 2:
             consultarEquipo(archivo, maxEquipos); 
+            cout << "Consulta realizada exitosamente!" << endl;
             break;
         case 3:
-            cambiarEstado();
+            cambiarEstado(archivo, maxEquipos);
+            cout << "Estado del equipo cambiado exitosamente!" << endl;
+            break;
         case 4:
-            listarEquipos();
+            listarEquipos(archivo, maxEquipos);
+            cout << "Equipos listados exitosamente!" << endl;
             break;
         case 5: 
-            marcarFueradeUso();
+            marcarFueradeUso(archivo, maxEquipos);
             break;
     }
+    cout << "MENU" << endl;
+    
+    cout << "Oprima '1' si desea registrar un equipo nuevo." << endl;
+    cout << "Oprima '2' si desea consultar un equipo por su código." << endl;
+    cout << "Oprima '3' si desea actualizar el estado del equipo. " << endl;
+    cout << "Oprima '4' si desea listar los equipos operativos." << endl;
+    cout << "Oprima '5' si desea marcar un equipo como fuera de uso. " << endl;
+    cout << "A continuación elija la opción que necesite ejecutar: ";
+    
+    cin >> menu;
+    } while (menu != 0);
+return 0;
 }
